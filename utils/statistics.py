@@ -23,11 +23,13 @@ TERMINATION_GOAL_REACHED = "goal_reached"
 TERMINATION_EXHAUSTED = "exhausted"
 TERMINATION_NODE_LIMIT = "node_limit"
 TERMINATION_TIMEOUT = "timeout"
+TERMINATION_GENERATED_LIMIT = "generated_limit"
 
 TERMINATION_MESSAGES = {
     TERMINATION_GOAL_REACHED: "Qëllimi u arrit (Goal State u gjet).",
     TERMINATION_EXHAUSTED: "Hapësira e kërkimit u eksplorua plotësisht.",
     TERMINATION_NODE_LIMIT: "Kërkimi u ndërpre: u arrit kufiri i nyjeve.",
+    TERMINATION_GENERATED_LIMIT: "Kërkimi u ndërpre: u arrit kufiri i gjendjeve të gjeneruara.",
     TERMINATION_TIMEOUT: "Kërkimi u ndërpre: u arrit kufiri i kohës (timeout).",
 }
 
@@ -92,7 +94,11 @@ class SearchStats:
 
     @property
     def interrupted(self) -> bool:
-        return self.termination_reason in (TERMINATION_NODE_LIMIT, TERMINATION_TIMEOUT)
+        return self.termination_reason in (
+            TERMINATION_NODE_LIMIT,
+            TERMINATION_TIMEOUT,
+            TERMINATION_GENERATED_LIMIT,
+        )
 
     @property
     def termination_message(self) -> str:
