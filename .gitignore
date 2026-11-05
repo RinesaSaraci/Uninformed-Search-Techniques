@@ -1,0 +1,30 @@
+# Python
+__pycache__/
+*.py[cod]
+*.pyo
+*.egg-info/
+build/
+dist/
+
+# Testimi
+.pytest_cache/
+.coverage
+htmlcov/
+
+# Mjedisi virtual
+venv/
+.venv/
+env/
+ENV/
+
+# VS Code
+.vscode/
+*.code-workspace
+
+# Streamlit (sekretet lokale)
+.streamlit/secrets.toml
+
+# Sistemi operativ
+Thumbs.db
+desktop.ini
+.DS_Store

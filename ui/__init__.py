@@ -1,0 +1,3 @@
+"""
+Paketa `ui` – ndërfaqja Streamlit.
+"""
