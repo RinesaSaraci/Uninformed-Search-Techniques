@@ -63,7 +63,15 @@ from utils.statistics import (
     SearchLimitReached,
     SearchStats,
 )
-from utils.validation import validate_search_limits
+from utils.validation import (
+    is_permutation,
+    matrix_columns,
+    validate_int,
+    validate_matrix_shape,
+    validate_matrix_values,
+    validate_non_negative_int,
+    validate_search_limits,
+)
 
 MIN_N = 1
 MAX_N = 7          # n = 7 zakonisht arrin kufijtë (shih README); n ≤ 6 zgjidhet
@@ -95,11 +103,7 @@ class InvalidLatinSquareConfigError(ValueError):
 # ---------------------------------------------------------------------------
 
 def validate_n(n) -> list[str]:
-    if not isinstance(n, int) or isinstance(n, bool):
-        return ["n duhet të jetë numër i plotë."]
-    if not MIN_N <= n <= MAX_N:
-        return [f"n duhet të jetë ndërmjet {MIN_N} dhe {MAX_N}."]
-    return []
+    return validate_int(n, "n", MIN_N, MAX_N)
 
 
 def compute_landscape(n: int) -> dict:
@@ -135,30 +139,20 @@ def verify_latin_square(matrix, n: int) -> tuple[bool, list[str]]:
     Verifikon një matricë në mënyrë të pavarur nga kërkimi:
     dimensionet n×n, vlerat në 1..n, çdo rresht dhe kolonë = {1..n}.
     """
-    errors: list[str] = []
-    if not isinstance(matrix, (list, tuple)) or len(matrix) != n:
-        return False, [f"Matrica duhet të ketë {n} rreshta."]
-    for i, row in enumerate(matrix, start=1):
-        if not isinstance(row, (list, tuple)) or len(row) != n:
-            errors.append(f"Rreshti {i} duhet të ketë {n} qeliza.")
+    errors = validate_matrix_shape(matrix, n, n)
+    if errors:
+        return False, errors
+    errors = validate_matrix_values(matrix, 1, n)
     if errors:
         return False, errors
 
-    expected = set(range(1, n + 1))
+    expected = range(1, n + 1)
     for i, row in enumerate(matrix, start=1):
-        for j, value in enumerate(row, start=1):
-            if not isinstance(value, int) or isinstance(value, bool) or value not in expected:
-                errors.append(f"Qeliza ({i}, {j}) ka vlerë të pavlefshme: {value!r}.")
-    if errors:
-        return False, errors
-
-    for i, row in enumerate(matrix, start=1):
-        if set(row) != expected:
+        if not is_permutation(row, expected):
             errors.append(f"Rreshti {i} nuk përmban secilën vlerë 1..{n} saktësisht një herë.")
-    for j in range(n):
-        column = [matrix[i][j] for i in range(n)]
-        if set(column) != expected:
-            errors.append(f"Kolona {j + 1} nuk përmban secilën vlerë 1..{n} saktësisht një herë.")
+    for j, column in enumerate(matrix_columns(matrix), start=1):
+        if not is_permutation(column, expected):
+            errors.append(f"Kolona {j} nuk përmban secilën vlerë 1..{n} saktësisht një herë.")
     return (not errors, errors)
 
 
@@ -255,13 +249,9 @@ def solve_latin_square(
     """
     errors = validate_n(n)
     errors += validate_search_limits(max_nodes, timeout_seconds)
-    if max_depth_limit is not None and (
-        not isinstance(max_depth_limit, int) or isinstance(max_depth_limit, bool)
-        or max_depth_limit < 0
-    ):
-        errors.append("Limiti maksimal i thellësisë duhet të jetë numër jo-negativ.")
-    if not isinstance(trace_limit, int) or isinstance(trace_limit, bool) or trace_limit < 0:
-        errors.append("Kufiri i gjurmës duhet të jetë numër jo-negativ.")
+    if max_depth_limit is not None:
+        errors += validate_non_negative_int(max_depth_limit, "Limiti maksimal i thellësisë")
+    errors += validate_non_negative_int(trace_limit, "Kufiri i gjurmës")
     if errors:
         raise InvalidLatinSquareConfigError(errors)
 

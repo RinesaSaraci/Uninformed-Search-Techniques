@@ -45,7 +45,7 @@ from utils.statistics import (
     SearchLimitReached,
     SearchStats,
 )
-from utils.validation import validate_search_limits
+from utils.validation import is_int, validate_int, validate_non_negative_int, validate_search_limits
 
 State = tuple[int, int, int]
 
@@ -70,20 +70,11 @@ class RiverProblem:
     capacity: int = DEFAULT_CAPACITY
 
     def validate(self) -> list[str]:
-        errors = []
-        for value, label in ((self.missionaries, "Numri i misionarëve"),
-                             (self.cannibals, "Numri i kanibalëve"),
-                             (self.capacity, "Kapaciteti i varkës")):
-            if not isinstance(value, int) or isinstance(value, bool):
-                errors.append(f"{label} duhet të jetë numër i plotë.")
-        if errors:
-            return errors
-        if not 0 <= self.missionaries <= 10 or not 0 <= self.cannibals <= 10:
-            errors.append("Numri i misionarëve dhe kanibalëve duhet të jetë 0–10.")
-        if self.missionaries + self.cannibals == 0:
+        errors = validate_int(self.missionaries, "Numri i misionarëve", 0, 10)
+        errors += validate_int(self.cannibals, "Numri i kanibalëve", 0, 10)
+        errors += validate_int(self.capacity, "Kapaciteti i varkës", 1, 6)
+        if not errors and self.missionaries + self.cannibals == 0:
             errors.append("Duhet të ketë të paktën një person.")
-        if not 1 <= self.capacity <= 6:
-            errors.append("Kapaciteti i varkës duhet të jetë 1–6.")
         return errors
 
     # -- gjendjet -----------------------------------------------------------
@@ -114,7 +105,7 @@ class RiverProblem:
     def is_valid_state(self, state) -> bool:
         return (
             isinstance(state, (tuple, list)) and len(state) == 3
-            and all(isinstance(v, int) and not isinstance(v, bool) for v in state)
+            and all(is_int(v) for v in state)
             and self.within_bounds(tuple(state)) and self.is_safe(tuple(state))
         )
 
@@ -215,8 +206,7 @@ def solve_missionaries_cannibals(
 ) -> RiverResult:
     problem = RiverProblem(missionaries, cannibals, capacity)
     errors = problem.validate() + validate_search_limits(max_explored, timeout_seconds)
-    if not isinstance(tree_nodes, int) or isinstance(tree_nodes, bool) or tree_nodes < 0:
-        errors.append("Numri i nyjeve të pemës duhet të jetë numër jo-negativ.")
+    errors += validate_non_negative_int(tree_nodes, "Numri i nyjeve të pemës")
     if errors:
         raise InvalidRiverConfigError(errors)
 

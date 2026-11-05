@@ -61,7 +61,14 @@ from utils.statistics import (
     SearchLimitReached,
     SearchStats,
 )
-from utils.validation import validate_search_limits
+from utils.validation import (
+    find_duplicates,
+    validate_matrix_shape,
+    validate_matrix_values,
+    validate_non_negative_int,
+    validate_optional_positive_int,
+    validate_search_limits,
+)
 
 SIZE = 9
 CELLS = 81
@@ -129,14 +136,7 @@ def copy_grid(grid: list[list[int]]) -> list[list[int]]:
 # ---------------------------------------------------------------------------
 
 def _find_duplicates(values: list[int]) -> list[int]:
-    seen, dups = set(), set()
-    for v in values:
-        if v == 0:
-            continue
-        if v in seen:
-            dups.add(v)
-        seen.add(v)
-    return sorted(dups)
+    return find_duplicates(values, ignore=0)
 
 
 def validate_grid(grid) -> list[str]:
@@ -144,18 +144,10 @@ def validate_grid(grid) -> list[str]:
     Validon një tabelë (enigmë ose zgjidhje). Kontrollon formën 9×9,
     vlerat 0..9 dhe përsëritjet në rreshta, kolona dhe nënrrjeta 3×3.
     """
-    if not isinstance(grid, (list, tuple)) or len(grid) != 9:
-        return ["Tabela duhet të ketë saktësisht 9 rreshta."]
-    errors: list[str] = []
-    for r, row in enumerate(grid, start=1):
-        if not isinstance(row, (list, tuple)) or len(row) != 9:
-            errors.append(f"Rreshti {r} duhet të ketë saktësisht 9 qeliza.")
-            continue
-        for c, value in enumerate(row, start=1):
-            if not isinstance(value, int) or isinstance(value, bool):
-                errors.append(f"Qeliza ({r}, {c}) duhet të jetë numër i plotë.")
-            elif not 0 <= value <= 9:
-                errors.append(f"Qeliza ({r}, {c}) ka vlerë {value}; lejohen 0–9 (0 = bosh).")
+    errors = validate_matrix_shape(grid, 9, 9, "Tabela")
+    if errors:
+        return errors
+    errors = validate_matrix_values(grid, 0, 9, empty_value=0)
     if errors:
         return errors
 
@@ -327,12 +319,8 @@ def solve_sudoku(
     """
     errors = validate_grid(grid)
     errors += validate_search_limits(max_explored, timeout_seconds)
-    if max_generated is not None and (
-        not isinstance(max_generated, int) or isinstance(max_generated, bool) or max_generated < 1
-    ):
-        errors.append("Kufiri i gjendjeve të gjeneruara duhet të jetë numër i plotë pozitiv.")
-    if not isinstance(trace_limit, int) or isinstance(trace_limit, bool) or trace_limit < 0:
-        errors.append("Kufiri i gjurmës duhet të jetë numër jo-negativ.")
+    errors += validate_optional_positive_int(max_generated, "Kufiri i gjendjeve të gjeneruara")
+    errors += validate_non_negative_int(trace_limit, "Kufiri i gjurmës")
     if errors:
         raise InvalidSudokuError(errors)
 

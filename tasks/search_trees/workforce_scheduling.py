@@ -56,7 +56,7 @@ from utils.statistics import (
     SearchLimitReached,
     SearchStats,
 )
-from utils.validation import validate_search_limits
+from utils.validation import validate_int, validate_non_negative_int, validate_search_limits
 
 # (çelësi, emri, ora e fillimit, ora e mbarimit) – mbarimi > 24 do të thotë dita tjetër
 SHIFTS = (
@@ -150,10 +150,7 @@ def validate_config(cfg: WorkforceConfig) -> list[str]:
         (cfg.min_rest_hours, "Pushimi minimal (orë)", 0, 24),
     )
     for value, label, low, high in ranges:
-        if not isinstance(value, int) or isinstance(value, bool):
-            errors.append(f"{label} duhet të jetë numër i plotë.")
-        elif not low <= value <= high:
-            errors.append(f"{label} duhet të jetë ndërmjet {low} dhe {high}.")
+        errors += validate_int(value, label, low, high)
     if errors:
         return errors
 
@@ -397,8 +394,7 @@ def solve_workforce_schedule(
     cfg = WorkforceConfig(num_workers, num_days, num_shifts, workers_per_shift,
                           max_consecutive_days, min_rest_hours)
     errors = validate_config(cfg) + validate_search_limits(max_nodes, timeout_seconds)
-    if not isinstance(tree_nodes, int) or isinstance(tree_nodes, bool) or tree_nodes < 0:
-        errors.append("Numri i nyjeve të pemës duhet të jetë numër jo-negativ.")
+    errors += validate_non_negative_int(tree_nodes, "Numri i nyjeve të pemës")
     if errors:
         raise WorkforceConfigError(errors)
 

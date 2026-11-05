@@ -72,7 +72,12 @@ from utils.statistics import (
     SearchLimitReached,
     SearchStats,
 )
-from utils.validation import validate_golfer_config, validate_search_limits
+from utils.validation import (
+    validate_golfer_config,
+    validate_non_negative_int,
+    validate_positive_int,
+    validate_search_limits,
+)
 
 DEFAULT_NUM_GOLFERS = 32
 DEFAULT_NUM_GROUPS = 8
@@ -222,19 +227,17 @@ def solve_social_golfers(
     upper_bound = landscape["upper_bound"]
     if requested_weeks is None:
         requested_weeks = upper_bound
-    if (
-        not isinstance(requested_weeks, int)
-        or isinstance(requested_weeks, bool)
-        or requested_weeks < 1
-    ):
-        raise InvalidConfigurationError(["Numri i javëve duhet të jetë numër i plotë pozitiv."])
+    week_errors = validate_positive_int(requested_weeks, "Numri i javëve")
+    if week_errors:
+        raise InvalidConfigurationError(week_errors)
     if requested_weeks > upper_bound:
         raise InvalidConfigurationError([
             f"Numri i kërkuar i javëve ({requested_weeks}) e tejkalon kufirin e sipërm "
             f"teorik ({upper_bound}); një orar i tillë nuk mund të ekzistojë."
         ])
-    if not isinstance(trace_limit, int) or trace_limit < 0:
-        raise InvalidConfigurationError(["Kufiri i gjurmës duhet të jetë numër jo-negativ."])
+    trace_errors = validate_non_negative_int(trace_limit, "Kufiri i gjurmës")
+    if trace_errors:
+        raise InvalidConfigurationError(trace_errors)
     if pivot_rule not in PIVOT_RULES:
         raise InvalidConfigurationError([
             f"Rregull i panjohur i pivot-it: {pivot_rule}. Lejohen: {', '.join(PIVOT_RULES)}."
@@ -524,6 +527,20 @@ def schedule_to_rows(schedule: Schedule) -> list[dict]:
         for w, week in enumerate(schedule, start=1)
         for j, group in enumerate(week, start=1)
     ]
+
+
+def pair_week_matrix(schedule: Schedule, num_golfers: int) -> list[list[int]]:
+    """
+    Matricë n×n për vizualizim: m[a][b] = java (1..w) kur golferët a+1 dhe b+1
+    luajtën bashkë; 0 = asnjëherë; −1 = luajtën bashkë më shumë se një herë.
+    """
+    matrix = [[0] * num_golfers for _ in range(num_golfers)]
+    for w, week in enumerate(schedule, start=1):
+        for group in week:
+            for a, b in combinations(group, 2):
+                for x, y in ((a - 1, b - 1), (b - 1, a - 1)):
+                    matrix[x][y] = w if matrix[x][y] == 0 else -1
+    return matrix
 
 
 def schedule_to_matrix(schedule: Schedule) -> list[list[str]]:

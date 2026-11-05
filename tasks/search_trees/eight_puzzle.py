@@ -50,7 +50,7 @@ from utils.statistics import (
     SearchLimitReached,
     SearchStats,
 )
-from utils.validation import validate_search_limits
+from utils.validation import is_int, validate_non_negative_int, validate_search_limits
 
 State = tuple[int, ...]
 
@@ -95,7 +95,7 @@ def validate_state(state) -> list[str]:
     """Gjendja duhet të jetë një permutacion i numrave 0..8."""
     if not isinstance(state, (tuple, list)) or len(state) != 9:
         return ["Gjendja duhet të ketë saktësisht 9 numra (3×3)."]
-    if any(not isinstance(v, int) or isinstance(v, bool) for v in state):
+    if not all(is_int(v) for v in state):
         return ["Të gjitha vlerat duhet të jenë numra të plotë."]
     if sorted(state) != list(range(9)):
         return ["Gjendja duhet të përmbajë secilin numër 0–8 saktësisht një herë (0 = bosh)."]
@@ -218,8 +218,7 @@ def solve_eight_puzzle(
 ) -> EightPuzzleResult:
     errors = validate_state(start)
     errors += validate_search_limits(max_explored, timeout_seconds)
-    if not isinstance(tree_nodes, int) or isinstance(tree_nodes, bool) or tree_nodes < 0:
-        errors.append("Numri i nyjeve të pemës duhet të jetë numër jo-negativ.")
+    errors += validate_non_negative_int(tree_nodes, "Numri i nyjeve të pemës")
     if errors:
         raise InvalidPuzzleError(errors)
 

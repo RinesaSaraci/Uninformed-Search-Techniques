@@ -117,3 +117,131 @@ class SearchStats:
             "max_nodes": self.max_nodes,
             "timeout_seconds": self.timeout_seconds,
         }
+
+
+# ---------------------------------------------------------------------------
+# Matja e kohës
+# ---------------------------------------------------------------------------
+
+class Timer:
+    """
+    Matës i thjeshtë kohe për përdorim me `with`:
+
+        with Timer() as t:
+            ...
+        t.elapsed  # sekonda
+    """
+
+    def __init__(self):
+        self.elapsed = 0.0
+        self._start = 0.0
+
+    def __enter__(self):
+        self._start = time.perf_counter()
+        return self
+
+    def __exit__(self, *exc):
+        self.elapsed = time.perf_counter() - self._start
+        return False
+
+
+def measure_time(function, *args, **kwargs):
+    """Ekzekuton funksionin dhe kthen (rezultati, sekondat)."""
+    with Timer() as timer:
+        result = function(*args, **kwargs)
+    return result, timer.elapsed
+
+
+# ---------------------------------------------------------------------------
+# Formatimi
+# ---------------------------------------------------------------------------
+
+def format_count(value: int | None) -> str:
+    """Numër me ndarës të mijëshëve (pikë, sipas përdorimit në shqip)."""
+    if value is None:
+        return "–"
+    return f"{value:,}".replace(",", ".")
+
+
+def format_duration(seconds: float | None) -> str:
+    if seconds is None:
+        return "–"
+    if seconds < 1e-3:
+        return f"{seconds * 1e6:.0f} µs"
+    if seconds < 1:
+        return f"{seconds * 1e3:.1f} ms"
+    return f"{seconds:.2f} s"
+
+
+def format_big_number(value: int) -> str:
+    """
+    Numër shumë i madh në formë shkencore, p.sh. 9^51 → '≈ 4,64 × 10^48'.
+    Numrat e vegjël (< 10^9) shfaqen të plotë.
+    """
+    if value < 10**9:
+        return format_count(value)
+    exponent = len(str(value)) - 1
+    # rrumbullakim i saktë me numra të plotë në 3 shifra domethënëse
+    scaled = (value * 1000 // 10**exponent + 5) // 10        # p.sh. 464
+    if scaled >= 1000:                                        # 9,995 → 10,0
+        scaled //= 10
+        exponent += 1
+    digits = str(scaled)
+    return f"≈ {digits[0]},{digits[1:]} × 10^{exponent}"
+
+
+# Etiketat dhe shpjegimet në shqip për çdo numërues të SearchStats
+STAT_DESCRIPTIONS = {
+    "generated": ("Gjendje të gjeneruara", "Kandidatë/gjendje të krijuar nga algoritmi."),
+    "explored": ("Gjendje të eksploruara", "Nyje të zgjeruara (të vizituara) gjatë kërkimit."),
+    "rejected": ("Gjendje të refuzuara", "Kandidatë që shkelën kufizimet ose u krasitën."),
+    "valid": ("Gjendje të vlefshme", "Gjendje të pranuara (kuptimi sipas detyrës)."),
+    "backtracks": ("Backtracks", "Sa herë u zhbë një caktim / u braktis një degë."),
+    "max_depth": ("Thellësia maksimale", "Thellësia më e madhe e arritur në pemë."),
+}
+
+
+def stats_rows(stats: SearchStats, extra: dict | None = None) -> list[dict]:
+    """
+    Tabelë e statistikave reale të një ekzekutimi:
+    [{"Metrika": ..., "Vlera": ..., "Shpjegimi": ...}, ...].
+    `extra` = {etiketa: (vlera, shpjegimi)} për metrika specifike të detyrës
+    (p.sh. madhësia maksimale e radhës, thellësia e zgjidhjes).
+    """
+    rows = []
+    for key, (label, description) in STAT_DESCRIPTIONS.items():
+        rows.append({"Metrika": label, "Vlera": format_count(getattr(stats, key)),
+                     "Shpjegimi": description})
+    for label, (value, description) in (extra or {}).items():
+        shown = format_count(value) if isinstance(value, int) and not isinstance(value, bool) \
+            else ("–" if value is None else str(value))
+        rows.append({"Metrika": label, "Vlera": shown, "Shpjegimi": description})
+    rows.append({"Metrika": "Koha e ekzekutimit", "Vlera": format_duration(stats.elapsed_seconds),
+                 "Shpjegimi": "Koha reale e matur me perf_counter."})
+    rows.append({"Metrika": "Kufiri i nyjeve",
+                 "Vlera": format_count(stats.max_nodes) if stats.max_nodes else "pa kufi",
+                 "Shpjegimi": "Kufiri i konfiguruar i nyjeve të eksploruara."})
+    rows.append({"Metrika": "Timeout",
+                 "Vlera": f"{stats.timeout_seconds:g} s" if stats.timeout_seconds else "pa kufi",
+                 "Shpjegimi": "Kufiri i konfiguruar i kohës."})
+    return rows
+
+
+def termination_summary(stats: SearchStats) -> dict:
+    """
+    Përmbledhje e përfundimit për ndërfaqen:
+      level = "success" (qëllimi u arrit), "info" (hapësira u shterua),
+              "warning" (kërkimi u ndërpre nga kufiri i nyjeve/kohës).
+    """
+    if stats.termination_reason == TERMINATION_GOAL_REACHED:
+        level = "success"
+    elif stats.interrupted:
+        level = "warning"
+    else:
+        level = "info"
+    return {
+        "reason": stats.termination_reason,
+        "message": stats.termination_message,
+        "interrupted": stats.interrupted,
+        "level": level,
+    }
