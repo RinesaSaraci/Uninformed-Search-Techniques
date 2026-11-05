@@ -417,9 +417,9 @@ def iterations_to_rows(iterations: list[IterationStats]) -> list[dict]:
         {
             "Iteracioni": it.iteration,
             "Limiti i thellësisë": it.depth_limit,
-            "Explored": it.explored,
-            "Generated": it.generated,
-            "Rejected": it.rejected,
+            "Të eksploruara": it.explored,
+            "Të gjeneruara": it.generated,
+            "Të refuzuara": it.rejected,
             "Cutoffs": it.cutoffs,
             "Backtracks": it.backtracks,
             "U gjet": "Po" if it.found else "Jo",
