@@ -146,10 +146,10 @@ def _eight_puzzle() -> None:
         c3.slider("Nyje në pemë (vizualizim)", 10, 150, key="ep_tree_nodes")
 
     b1, b2 = st.columns(2)
-    b1.button("▶ Ekzekuto BFS", type="primary", on_click=_ep_run, use_container_width=True,
+    b1.button("▶ Ekzekuto BFS", type="primary", on_click=_ep_run, 
               key="ep_run")
     b2.button("↺ Rivendos", on_click=reset_state, args=(EP_DEFAULTS, EP_RESULTS),
-              use_container_width=True, key="ep_reset")
+               key="ep_reset")
 
     show_errors(st.session_state.get("ep_errors", []))
     result = st.session_state.get("ep_result")
@@ -231,10 +231,10 @@ def _missionaries() -> None:
                    f"prej tyre të sigurta: {problem.count_safe_states()}.")
 
     b1, b2 = st.columns(2)
-    b1.button("▶ Ekzekuto BFS", type="primary", on_click=_mc_run, use_container_width=True,
+    b1.button("▶ Ekzekuto BFS", type="primary", on_click=_mc_run,
               key="mc_run")
     b2.button("↺ Rivendos", on_click=reset_state, args=(MC_DEFAULTS, MC_RESULTS),
-              use_container_width=True, key="mc_reset")
+              key="mc_reset")
 
     show_errors(st.session_state.get("mc_errors", []))
     result = st.session_state.get("mc_result")
@@ -247,7 +247,7 @@ def _missionaries() -> None:
     else:
         st.success(result.message)
         st.markdown("#### Rruga e zgjidhjes")
-        st.dataframe(mc.path_to_rows(result), hide_index=True, use_container_width=True)
+        st.dataframe(mc.path_to_rows(result), hide_index=True)
         step = st.slider("Hapi aktual", 0, len(result.path) - 1, 0, key="mc_step")
         move = result.moves[step - 1] if step > 0 else None
         show_figure(plot_river_state(
@@ -383,10 +383,10 @@ def _workforce() -> None:
                    f"turne/punëtor; kufiri i poshtëm i imbalance = {land['imbalance_lower_bound']}.")
 
     b1, b2 = st.columns(2)
-    b1.button("▶ Ekzekuto DFS", type="primary", on_click=_wf_run, use_container_width=True,
+    b1.button("▶ Ekzekuto DFS", type="primary", on_click=_wf_run, 
               key="wf_run")
     b2.button("↺ Rivendos", on_click=reset_state, args=(WF_DEFAULTS, WF_RESULTS),
-              use_container_width=True, key="wf_reset")
+              key="wf_reset")
 
     show_errors(st.session_state.get("wf_errors", []))
     result = st.session_state.get("wf_result")
@@ -406,8 +406,7 @@ def _workforce() -> None:
         m[3].metric("Nyja e zgjidhjes së parë", result.first_solution_explored)
 
         st.markdown("#### Orari javor")
-        st.dataframe(wf.schedule_to_rows(result.schedule, cfg), hide_index=True,
-                     use_container_width=True)
+        st.dataframe(wf.schedule_to_rows(result.schedule, cfg), hide_index=True)
         left, right = st.columns(2)
         with left:
             show_figure(plot_workforce_schedule(result.schedule, names))
@@ -415,7 +414,7 @@ def _workforce() -> None:
             rows = wf.workload_rows(result.schedule, cfg)
             show_figure(plot_workload(rows, names))
         st.markdown("#### Turnet për punëtor")
-        st.dataframe(rows, hide_index=True, use_container_width=True)
+        st.dataframe(rows, hide_index=True)
 
         st.markdown("#### Validimi i të gjitha kufizimeve (i pavarur)")
         st.dataframe(
@@ -424,7 +423,7 @@ def _workforce() -> None:
                             ("❌ Shkelet" if ch["hard"] else "⚠️ Jo optimale")),
               "Detaje": "; ".join(ch["details"][:3]) or "–"}
              for ch in result.verification["checks"]],
-            hide_index=True, use_container_width=True)
+            hide_index=True)
         show_validation(result.verification["valid"], [],
                         "Orari plotëson të gjitha kufizimet e forta (1–5).")
     _tree_section(result.tree, "Search Tree – Workforce Scheduling (DFS)", "wf_tree")

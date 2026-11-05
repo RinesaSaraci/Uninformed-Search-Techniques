@@ -213,8 +213,8 @@ def _board_input():
     c1, c2, c3 = st.columns([2, 1, 1])
     c1.selectbox("Vështirësia", list(DIFFICULTY_LABELS),
                  format_func=lambda key: DIFFICULTY_LABELS[key], key="sd_difficulty")
-    c2.button("Gjenero enigmën", on_click=_load_puzzle, use_container_width=True, key="sd_load")
-    c3.button("Tabelë bosh (futje manuale)", on_click=_clear_board, use_container_width=True,
+    c2.button("Gjenero enigmën", on_click=_load_puzzle, key="sd_load")
+    c3.button("Tabelë bosh (futje manuale)", on_click=_clear_board,
               key="sd_clear")
 
     left, right = st.columns([1, 1])
@@ -226,7 +226,6 @@ def _board_input():
         edited = st.data_editor(
             _grid_to_frame(st.session_state["sd_grid"]),
             key=editor_key,
-            use_container_width=True,
             column_config={col: st.column_config.NumberColumn(col, min_value=0, max_value=9,
                                                               step=1, width="small")
                            for col in COLUMNS},
@@ -252,10 +251,10 @@ def _controls() -> None:
         st.caption("Pa MRV, BFS mund të gjenerojë qindra mijëra gjendje edhe për enigma të "
                    "mesme – kufijtë e mbrojnë ekzekutimin. Algoritmi nuk ndërrohet kurrë.")
     b1, b2, b3 = st.columns(3)
-    b1.button("▶ Zgjidh me BFS", type="primary", on_click=_solve, use_container_width=True,
+    b1.button("▶ Zgjidh me BFS", type="primary", on_click=_solve,
               key="sd_solve")
-    b2.button("✔ Valido", on_click=_validate, use_container_width=True, key="sd_validate")
-    b3.button("↺ Rivendos", on_click=_reset, use_container_width=True, key="sd_reset")
+    b2.button("✔ Valido", on_click=_validate, key="sd_validate")
+    b3.button("↺ Rivendos", on_click=_reset, key="sd_reset")
 
 
 def _validation_report() -> None:
@@ -341,7 +340,7 @@ def _results() -> None:
               "Vlerat e mundshme": ", ".join(map(str, e["candidates"])) or "asnjë",
               "Madhësia e radhës": e["queue_size"],
               "Dead end": "Po" if e["dead_end"] else "Jo"} for e in result.trace],
-            hide_index=True, use_container_width=True,
+            hide_index=True, 
         )
         st.caption("Nivelet e BFS nuk zvogëlohen kurrë: kjo tregon renditjen FIFO.")
 

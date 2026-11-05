@@ -36,7 +36,7 @@ def show_statistics(stats, extra: dict | None = None) -> None:
     cols[2].metric("Gjendje të refuzuara", f"{stats.rejected:,}".replace(",", "."))
     cols[3].metric("Koha", f"{stats.elapsed_seconds:.3f} s")
     with st.expander("Të gjitha statistikat e ekzekutimit"):
-        st.dataframe(stats_rows(stats, extra), hide_index=True, use_container_width=True)
+        st.dataframe(stats_rows(stats, extra), hide_index=True)
         st.caption("Të gjitha vlerat janë numëruar gjatë ekzekutimit real të algoritmit.")
 
 

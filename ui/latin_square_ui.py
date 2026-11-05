@@ -133,7 +133,7 @@ def _landscape() -> None:
              "Madhësia": format_count(land["reduced_latin_squares"])
              if land["reduced_latin_squares"] else "–"},
         ]
-        st.dataframe(rows, hide_index=True, use_container_width=True)
+        st.dataframe(rows, hide_index=True)
         st.caption("Hapësira pa kufizime përfshin të gjitha mbushjet (edhe të pavlefshmet); "
                    "Latin Squares të vlefshme janë vetëm një pjesë shumë e vogël e saj. "
                    "Numrat e saktë (OEIS A002860, A000315) shfaqen vetëm për n ≤ 7.")
@@ -186,7 +186,7 @@ def _results() -> None:
     st.subheader("9. Statistikat e performancës")
     if st.checkbox("Shfaq iteracionet e IDDFS", value=True, key="ls_show_iterations"):
         rows = iterations_to_rows(result.iterations)
-        st.dataframe(rows, hide_index=True, use_container_width=True)
+        st.dataframe(rows, hide_index=True)
         st.bar_chart({"Nyje të eksploruara": [r["Të eksploruara"] for r in rows]},
                      x_label="Iteracioni (limiti = iteracioni − 1)",
                      y_label="Nyje të eksploruara")
@@ -209,10 +209,10 @@ def render() -> None:
     _configuration()
     _landscape()
     b1, b2, b3 = st.columns(3)
-    b1.button("▶ Gjenero zgjidhjen", type="primary", on_click=_run, use_container_width=True,
+    b1.button("▶ Gjenero zgjidhjen", type="primary", on_click=_run, 
               key="ls_run")
-    b2.button("✔ Valido zgjidhjen", on_click=_validate, use_container_width=True,
+    b2.button("✔ Valido zgjidhjen", on_click=_validate,
               key="ls_validate", disabled="ls_result" not in st.session_state)
     b3.button("↺ Rivendos", on_click=reset_state, args=(DEFAULTS, RESULT_KEYS),
-              use_container_width=True, key="ls_reset")
+              key="ls_reset")
     _results()

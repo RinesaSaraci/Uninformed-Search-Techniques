@@ -79,7 +79,7 @@ def render() -> None:
                 st.markdown(f"**Algoritmi:** {assignment['algorithm']}")
                 st.write(assignment["description"])
                 st.button("Hap detyrën", key=f"open_{index}", on_click=_go_to,
-                          args=(assignment["page"],), use_container_width=True)
+                          args=(assignment["page"],))
 
     st.divider()
     st.caption(

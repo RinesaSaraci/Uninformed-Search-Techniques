@@ -131,8 +131,7 @@ def _landscape_section() -> None:
             {"Madhësia": "Ndarje të ndryshme të një jave",
              "Vlera": format_big_number(land["weekly_partitions"])},
         ]
-        st.dataframe([{k: str(v) for k, v in r.items()} for r in rows], hide_index=True,
-                     use_container_width=True)
+        st.dataframe([{k: str(v) for k, v in r.items()} for r in rows], hide_index=True)
         st.latex(
             rf"w \le \left\lfloor \frac{{C(n,2)}}{{g\cdot C(p,2)}} \right\rfloor = "
             rf"\left\lfloor \frac{{{land['total_pairs']}}}{{{land['pairs_per_week']}}} "
@@ -221,7 +220,7 @@ def _results() -> None:
     if result.weeks_constructed:
         _week_cards(result)
         st.markdown("#### Tabela e plotë e orarit")
-        st.dataframe(schedule_to_rows(result.schedule), hide_index=True, use_container_width=True)
+        st.dataframe(schedule_to_rows(result.schedule), hide_index=True)
         col_a, col_b = st.columns([3, 2])
         with col_a:
             show_figure(plot_golfers_schedule(result.schedule))
@@ -246,7 +245,7 @@ def _results() -> None:
             [{"Ngjarja": labels.get(e["event"], e["event"]), "Java": e["week"],
               "Grupi #": e["group_index"], "Golferët": str(e["group"]),
               "Thellësia": e["depth"]} for e in result.trace],
-            hide_index=True, use_container_width=True,
+            hide_index=True,
         )
 
 
@@ -263,9 +262,9 @@ def render() -> None:
 
     b1, b2, b3 = st.columns(3)
     b1.button("▶ Ekzekuto algoritmin", type="primary", on_click=_run,
-              use_container_width=True, key="sg_run")
-    b2.button("✔ Valido zgjidhjen", on_click=_validate, use_container_width=True,
+              key="sg_run")
+    b2.button("✔ Valido zgjidhjen", on_click=_validate,
               key="sg_validate", disabled="sg_result" not in st.session_state)
     b3.button("↺ Rivendos", on_click=reset_state, args=(DEFAULTS, RESULT_KEYS),
-              use_container_width=True, key="sg_reset")
+              key="sg_reset")
     _results()
